@@ -1,0 +1,41 @@
+%%% This example shows how to run SlashBurn.
+%%% It first shows the original adjacency matrix, runs SlashBurn, and 
+%%% show the changed adjacency matrix after reordering.
+
+
+%%% Construct an adjacency matrix A
+%%% This matrix is an example. Change A with your own adjacency matrix.
+
+% This matrix is the adjacency matrix of the graph shown in Figure 6 of ICDM'11 paper.
+A = zeros(16, 16);
+
+A(1,9) = 1;
+A(1,13) = 1;
+A(1,14) = 1;
+A(1,15) = 1;
+A(1,16) = 1;
+A(2,3) = 1;
+A(2,4) = 1;
+A(2,5) = 1;
+A(2,6) = 1;
+A(6,7) = 1;
+A(6,8) = 1;
+A(7,8) = 1;
+A(9,10) = 1;
+A(9,11) = 1;
+A(10,11) = 1;
+A(12,13) = 1;
+
+A = sparse(1.0 * ((A+A') > 0));
+
+%%% Adjacency matrix before SlashBurn
+spy(A);
+
+%%% Run SlashBurn
+k=1;
+dir=0;
+[niter,gccsize,Ak] = SlashBurn(A, k, dir);
+
+%%% Adjacency matrix before SlashBurn
+spy(Ak);
+
