@@ -9,6 +9,7 @@ import numpy as np
 import math
 
 filename = sys.argv[1]
+
 edgelist = np.genfromtxt(filename, delimiter=' ')
 
 vertexCount = int(max(max(edgelist,key=lambda item:item[1])[0], max(edgelist,key=lambda item:item[1])[1]))
@@ -34,14 +35,18 @@ print('Variance is          :  ', "{0:.6f}".format(np.var(differenceList)))
 print('Standard deviation   :  ', "{0:.6f}".format(np.std(differenceList)))
 print('*******************************************')
 
-differenceList = [math.log10(x) for x in differenceList]
-expected = [math.pow(x,2) for x in differenceList]
+with open(filename + '_Gaps.txt', 'w') as f:
+    for item in differenceList:
+        f.write("%s\n" % item)
 
-print('Minimum log gap      :  ', "{0:.6f}".format(np.min(differenceList)))
-print('Average log gap      :  ', "{0:.6f}".format(np.average(differenceList)))
-print('Maximum log gap      :  ', "{0:.6f}".format(np.max(differenceList)))
-print('Total (sum) gap score:  ', "{0:.6f}".format(np.sum(differenceList)))
-print('Expected value of X^2:  ', "{0:.6f}".format(np.sum(expected) / edgeCount))
-print('Variance is          :  ', "{0:.6f}".format(np.var(differenceList)))
-print('Standard deviation   :  ', "{0:.6f}".format(np.std(differenceList)))
-print('*******************************************')
+# differenceList = [math.log10(x) for x in differenceList]
+# expected = [math.pow(x,2) for x in differenceList]
+
+# print('Minimum log gap      :  ', "{0:.6f}".format(np.min(differenceList)))
+# print('Average log gap      :  ', "{0:.6f}".format(np.average(differenceList)))
+# print('Maximum log gap      :  ', "{0:.6f}".format(np.max(differenceList)))
+# print('Total (sum) gap score:  ', "{0:.6f}".format(np.sum(differenceList)))
+# print('Expected value of X^2:  ', "{0:.6f}".format(np.sum(expected) / edgeCount))
+# print('Variance is          :  ', "{0:.6f}".format(np.var(differenceList)))
+# print('Standard deviation   :  ', "{0:.6f}".format(np.std(differenceList)))
+# print('*******************************************')
