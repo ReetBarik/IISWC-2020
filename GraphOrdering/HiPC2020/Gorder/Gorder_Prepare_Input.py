@@ -24,4 +24,4 @@ else:
 G = nx.convert_node_labels_to_integers(G, first_label = 0)    
 
 # Change the 2nd argument to just 'filename' below to rewite over the input file
-nx.write_edgelist(G, 'Zero_Indexed_' + filename, data = False)
+nx.write_edgelist(G, filename, data = False)
