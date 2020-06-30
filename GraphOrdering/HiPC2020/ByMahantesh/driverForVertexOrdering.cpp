@@ -156,6 +156,30 @@ int main(int argc, char** argv) {
         writeGraphGorderEdgeList(G, outGorder);
     }
     
+    //RCM-Strict: Print out the file
+        if(opts.vtxOrderingAlgorithm == 4) {
+            computeMinLAScores(G);
+            
+            // Datastructures to store old2New map
+            long NV = G->numVertices;
+            long *old2NewMap = (long *) malloc (NV * sizeof(long)); assert(old2NewMap != 0);
+            //Initialize the Vectors:
+    #pragma omp parallel for
+            for (long i=0; i<NV; i++) {
+                old2NewMap[i] = -1; //Initialize the rank as -1
+            }
+            
+            //Call the RCM algorithm:
+            //algoReverseCuthillMcKeeStrictGraph( G, old2NewMap, nT);
+            algoReverseCuthillMcKeeStrictGraph( G, old2NewMap, nT);
+            
+            //Now output the graph in Matrix-Market format:
+            char outFileRcm[256];
+            sprintf(outFileRcm,"%s_RcmStrict.edges", opts.inFile);
+            writeGraphGorderEdgeListReordered(G, outFileRcm, old2NewMap);
+            free(old2NewMap);
+        } //End of RCM
+    
     //Cleanup:
     if(G != 0) {
         free(G->edgeListPtrs);

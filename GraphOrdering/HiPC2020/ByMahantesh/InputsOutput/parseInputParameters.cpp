@@ -79,7 +79,7 @@ void clustering_parameters::usage() {
     cout << "# of colors    : -n <value> [default=16]"       << endl;
     cout << "--------------------------------------------------------------------------------------" << endl;
     cout << "Vtx Ordering   : -z <value> [default=0]  (0) Print Statistics (1) RCM (2) Grappolo    " << endl;
-    cout << "                                         (3) Print graph for Gorder " << endl;
+    cout << "                                         (3) Print graph for Gorder (4) RCM-Strict    " << endl;
     cout << "***************************************************************************************"<< endl;
 }//end of usage()
 

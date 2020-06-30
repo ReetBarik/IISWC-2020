@@ -27,10 +27,10 @@
 
 #include <defs.h>
 #include <dataStructureHeap.h>
+#include "utilitySortingAlgorithms.h"
 
 // Perform reverse Cuthill-McKee operation on the graph
-// SSize indicates the size of Source
-// Sets the pointer in isChordal from one direction ONLY
+// Returns old2New map indicating the new id of the old id
 void algoReverseCuthillMcKeeGraph( graph *G, long *old2NewMap, int nThreads )
 {
     printf("Within algoReverseCuthillMcKeeGraph() \n");
@@ -227,7 +227,7 @@ void algoReverseCuthillMcKeeGraph( graph *G, long *old2NewMap, int nThreads )
     printf("***********************************************\n");
     
     //Perform checks:
-    #pragma omp parallel for
+#pragma omp parallel for
     for (long i=0; i<NV; i++) {
         tmpR[i] = -1; //Initialize the rank as -1
     }
@@ -236,9 +236,9 @@ void algoReverseCuthillMcKeeGraph( graph *G, long *old2NewMap, int nThreads )
     }
     long numVisited = 0;
     for (long i=0; i<NV; i++) {
-           if (tmpR[i] == 1)
-               numVisited++;
-       }
+        if (tmpR[i] == 1)
+            numVisited++;
+    }
     printf("Num visited: %ld  -- |V|: %ld\n", numVisited, NV);
     assert(numVisited == NV);
     
@@ -248,9 +248,234 @@ void algoReverseCuthillMcKeeGraph( graph *G, long *old2NewMap, int nThreads )
     
 } //End of algoReverseCuthillMcKeeGraph()
 
-
-void algoReverseCuthillMcKeeStrictGraph( graph *G, long *pOrder, int nThreads ) {
-    printf("Not implemented yet\n");
+// Perform reverse Cuthill-McKee operation on the graph: STRICT version
+// Returns old2New Map
+void algoReverseCuthillMcKeeStrictGraph( graph *G, long *old2NewMap, int nThreads ) {
+    printf("Within algoReverseCuthillMcKeeStrictGraph() -- serial implementation.\n");
+    
+    double time1=0, time2=0, total=0, totalTime=0;
+    long    NV        = G->numVertices;
+    long    NE        = G->numEdges;
+    long    *vtxPtr   = G->edgeListPtrs;
+    edge    *vtxInd   = G->edgeList;
+    printf("Vertices:%ld  Edges:%ld\n", NV, NE);
+    
+    //STEP 1: Sort the vertices in order of their degree
+    //Compute the degree of each vertex:
+    time1 = omp_get_wtime();
+    long *degree  = (long *) malloc (NV * sizeof(long)); assert(degree != 0);
+    for (long i=0; i<NV; i++) {
+        degree[i] = vtxPtr[i+1] - vtxPtr[i];
+    }
+    //Add the vertices to a heap data structure:
+    heap *myHeap = (heap*) malloc (sizeof(heap));
+    heapInitializeToN(myHeap, NV);
+    printf("Max heap size: %ld\n", myHeap->maxsize);
+    term newTerm;
+    
+    long *visited  = (long *) malloc (NV * sizeof(long)); assert(visited != 0);
+    long *R = (long *) malloc (NV * sizeof(long)); assert(R != 0);
+    //Initialize the Vectors:
+    for (long i=0; i<NV; i++) {
+        visited[i]= 0; //zero means not visited
+        R[i] = -1; //Initialize the rank as -1
+    }
+    long howManyAdded = 0; //How many vertices have been added to the queue
+    //Do not add isolated (degree=0) vertices:
+    for (int i=0; i<NV; i++) {
+        if(degree[i] > 0) {
+            newTerm.id = i;
+            newTerm.weight = degree[i];
+            heapAdd(myHeap, newTerm); //Has to be added in serial
+        } else {
+            R[howManyAdded] = i; //Add them directly to the stack
+            visited[i] = 1;
+            howManyAdded++;
+        }
+    }
+    printf("Heap size: %ld\n", myHeap->size);
+    time2 = omp_get_wtime();
+    printf("Time for adding %ld elements to the heap: %lf\n",NV, time2-time1);
+    totalTime += time2-time1;
+    
+    //STEP 2: Now perform the BFS
+    //The Queue Data Structure for the Dominating Set:
+    //The Queues are important for synchornizing the concurrency:
+    //Have two queues - read from one, write into another
+    // at the end, swap the two.
+    long *Q    = (long *) malloc (NV * sizeof(long)); assert(Q != 0);
+    long *Qtmp = (long *) malloc (NV * sizeof(long)); assert(Qtmp != 0);
+    long *Qswap;
+    
+    for (long i=0; i<NV; i++) {
+        Q[i]= -1;
+        Qtmp[i]= -1;
+    }
+    long QTail=0; //Tail of the queue (implicitly will represent the size)
+    long QtmpTail=0; //Tail of the queue (implicitly will represent the size)
+    
+    //Get the smallest degree as the first source vertex
+    term *data = myHeap->elements;
+    heapRemoveMin(myHeap);     //Remove it from the heap
+    printf("Source vertex: %ld\n", data[0].id);
+    Q[0] = data[0].id; //Add the smallest vertex to the queue
+    QTail = 1; //Increment the queue tail
+    visited[data[0].id] = 1; //Mark the vertex as visited
+    R[howManyAdded] = data[0].id; //Enter the vertex in the vector
+    howManyAdded++;
+    printf("R[%ld] = %ld\n", howManyAdded, data[0].id);
+    
+    //Vector to sort the newly discovered vertices
+    //To make it Minimization problem, substract the degree from NR, the max degree possible.
+    vector<indexWeight> sortedWeightList; //Data structure to link index to weights
+    MilanBool descending = false; //To arrange the weights in the non-decreasing order of degree
+    try
+    {
+        sortedWeightList.reserve(NV / 2); //Guess for the frontier size: |V| / 2
+    }
+    catch ( length_error )
+    {
+        cerr<<"Within Function: algoReverseCuthillMcKeeStrictGraph() \n";
+        cerr<<"Error: Not enough memory to allocate for sortedWeightList \n";
+        exit(1);
+    }
+    
+    long nCC = 1;
+    while (howManyAdded < NV) { //Process until all the vertices have been added to the queue
+        printf("***********************************************\n");
+        printf("Connected component       : %d     \n",    nCC);
+        printf("***********************************************\n");
+        //The size of Q1 is now QTail+1; the elements are contained in Q1[0] through Q1[Q1Tail]
+        int nLoops=0; //Count number of iterations in the while loop
+        while ( QTail > 0 ) {
+            printf("Loop %d, QSize= %ld\n",nLoops,QTail);
+            //KEY IDEA: Process all the members of the queue concurrently:
+            time1 = omp_get_wtime();
+            for (long Qi=0; Qi<QTail; Qi++) {
+                long v = Q[Qi];
+                long adj1 = vtxPtr[v];
+                long adj2 = vtxPtr[v+1];
+                for(long k = adj1; k < adj2; k++) {
+                    long x = vtxInd[k].tail;
+                    //Has this neighbor been visited?
+                    if ( __sync_fetch_and_add(&visited[x], 1) == 0 ) {
+                        //Not visited: add it to the Queue
+                        long whereInQ = __sync_fetch_and_add(&QtmpTail, 1);
+                        Qtmp[whereInQ] = x;
+                        //long whereInR = __sync_fetch_and_add(&howManyAdded, 1);
+                        //printf("R[%ld] = %ld\n", whereInR, x);
+                        //R[whereInR] = x; //Add it to the ranked list
+                        indexWeight newNode( x, degree[x] ); //first NC values hold Vertex weights on Columns
+                        sortedWeightList.push_back(newNode);
+                    }
+                } //End of for loop on k: the neighborhood of v
+            } //End of for(Qi)
+            //Now sort the queue:
+            QuickSort3Way(sortedWeightList.begin(), QtmpTail,  descending);
+            //Add vertices in a sorted order
+            for (long iQtmpTail=0; iQtmpTail < QtmpTail; iQtmpTail++ ) //O(n)
+            {
+                R[howManyAdded] = sortedWeightList[iQtmpTail].getIndex(); //Add it to the ranked list
+                howManyAdded++;
+                //cout<<"Adding: "<<sortedWeightList[iQtmpTail].getIndex()<<"  -- "<<sortedWeightList[iQtmpTail].getWeight()<<endl;
+            }
+            sortedWeightList.clear();
+            // Swap the two queues:
+            Qswap = Q;
+            Q = Qtmp; //Q now points to the second vector
+            Qtmp = Qswap;
+            QTail = QtmpTail; //Number of elements
+            QtmpTail = 0; //Symbolic emptying of the second queue
+            nLoops++;
+            time2  = omp_get_wtime();
+            total += time2-time1;
+        } //end of while ( !Q.empty() )
+        printf("***********************************************\n");
+        printf("Number of iterations       : %d     \n", nLoops);
+        printf("Time for Graph-traversal   : %lf sec\n", total);
+        printf("Number of elements added   : %ld    \n", howManyAdded);
+        printf("***********************************************\n");
+        
+        //Now look for the next smallest id:
+        bool found = 1;
+        if(howManyAdded < NV) {
+            printf("Looking for the next source vertex...(Heap size = %ld)\n", myHeap->size);
+            term *data;
+            do {
+                data = myHeap->elements;
+                //printf("Processing vertex: %ld Visited: %ld -- (Heap size = %ld)\n", data[0].id+1, visited[data[0].id], myHeap->size);
+                heapRemoveMin(myHeap);
+                if (myHeap->size == 0) { //No more elements to look at
+                    found = 0;
+                    printf("Quitting because there is nothing in the heap...(Heap size = %ld)\n", myHeap->size);
+                    break;
+                }
+                //printf("Id: %ld  -- status: %ld\n", data[0].id, visited[data[0].id]);
+            } while(visited[data[0].id] > 0); //Check if it has already been visited
+            if (found == 0) {
+                break; //break from the main loop
+            } else { //Add the new source to the list
+                printf("New source vertex: %ld\n", data[0].id);
+                Q[0] = data[0].id; //Add the smallest vertex to the queue
+                QTail = 1; //Increment the queue tail
+                visited[data[0].id] = 1; //Mark the vertex as visited
+                R[howManyAdded] = data[0].id; //Enter the vertex in the vector
+                //printf("R[%ld] = %ld\n", howManyAdded, data[0].id);
+                howManyAdded++; //Increment the #vertices that have been added to the stack
+                nCC++;
+            }
+        }//End of if()
+        totalTime += total;
+        total = 0;
+    } //End of while (howManyAdded < NV)
+    //Clean Up:
+    free(Q);
+    free(Qtmp);
+    free(visited);
+    free(myHeap->elements);
+    free(myHeap);
+    free(degree);
+    
+    assert(howManyAdded == NV); //Sanity check before moving to next step
+    //STEP 3: Received a valid vector; reverse the order:
+    long *tmpR = (long *) malloc (NV * sizeof(long)); assert(tmpR != 0);
+    //Initialize the Vectors:
+#pragma omp parallel for
+    for (long i=0; i<NV; i++) {
+        tmpR[i] = -1; //Initialize the rank as -1
+    }
+#pragma omp parallel for
+    for (long i=0; i<NV; i++) {
+        tmpR[NV-1-i] = R[i];
+    }
+    for (long i=0; i<NV; i++) {
+        old2NewMap[tmpR[i]] = i; //old2New index mapping
+    }
+    printf("***********************************************\n");
+    printf("Number of connected components       : %d     \n", nCC);
+    printf("Total Time                           : %lf sec\n", totalTime);
+    printf("***********************************************\n");
+    
+    //Perform checks:
+#pragma omp parallel for
+    for (long i=0; i<NV; i++) {
+        tmpR[i] = -1; //Initialize the rank as -1
+    }
+    for (long i=0; i<NV; i++) {
+        tmpR[old2NewMap[i]] = 1; //old2New index mapping
+        //printf("%ld -- %ld\n", i+1, old2NewMap[i]+1);
+    }
+    long numVisited = 0;
+    for (long i=0; i<NV; i++) {
+        if (tmpR[i] == 1)
+            numVisited++;
+    }
+    printf("Num visited: %ld  -- |V|: %ld\n", numVisited, NV);
+    assert(numVisited == NV);
+    
+    //Clean Up:
+    free(R);
+    free(tmpR);
 }
 
 // Perform reverse Cuthill-McKee operation on the graph

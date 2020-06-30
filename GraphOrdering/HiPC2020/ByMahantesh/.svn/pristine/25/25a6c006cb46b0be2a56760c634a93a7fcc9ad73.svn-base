@@ -51,11 +51,15 @@ void buildOld2NewMap(long N, long *C, long *commIndex); //Build the reordering m
 
 //Reverse Cuthill-McKee Algorithm
 void algoReverseCuthillMcKeeGraph( graph *G, long *old2NewMap, int nThreads );
-void algoReverseCuthillMcKeeStrictGraph( graph *G, long *pOrder, int nThreads );
+void algoReverseCuthillMcKeeStrictGraph( graph *G, long *old2NewMap, int nThreads );
 void algoReverseCuthillMcKee( graph *G, long *pOrder, int nThreads );
 void algoReverseCuthillMcKeeStrict( graph *G, long *pOrder, int nThreads );
 
 //Grappolo-based ordering
 void clusteringBasedOrderingSimple(graph *G, long *pOrder, int nThreads, int coloring);
+void clusteringBasedOrderingWithRcm(graph *G, long *pOrder, int nThreads, int coloring);
+
+//Half-approximate matching:
+void algoHalfApproxMatchingSuitor( graph* G, long *Mate );
 
 #endif

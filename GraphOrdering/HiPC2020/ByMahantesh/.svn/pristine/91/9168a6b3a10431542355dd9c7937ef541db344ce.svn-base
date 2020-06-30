@@ -55,7 +55,7 @@ typedef struct
 {
     long maxsize;            /* Maximum size       */
     long size;               /* Current size       */
-    term * elements;        /* vector of elements */
+    term * elements;         /* vector of elements */
 } heap;
 
 void heapInitialize(heap *); /* Initialize to HEAP_MAX_SIZE */
