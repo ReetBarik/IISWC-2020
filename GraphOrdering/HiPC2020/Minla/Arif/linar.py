@@ -6,11 +6,13 @@ Created on Tue Sep 18 14:40:09 2018
 @author: khan242
 """
 
+import sys
 import random
 import networkx as nx
 import math
 import hypergraph as hyp
 from networkx.utils import reverse_cuthill_mckee_ordering
+import math
 
 from multiprocessing import Pool
 from functools import reduce
@@ -127,27 +129,22 @@ def evaluate_permutation_parallel(interactions,rcm,DM):
         return 0
 
 
-def evaluate_permutation(interactions,rcm,D):
+def evaluate_permutation(G,rcm):
    
-    dist=0
+    dist = 0
+    count = 0
     #print(interactions)
     #print(rcm)
     #print(D)
-    for keys in interactions.keys():
-        
-        new_keys=[]
-        for i in range(len(keys)):
-            new_keys.append(rcm[keys[i]])
-        
-        new_keys=tuple(set(new_keys)) 
-        
-        dist=dist+hyp.induce_hyperedge_distance(new_keys,D)
+    for i,j in G.edges:
+        dist = dist + abs(i - j)
+        count = count + 1
 
     
-    if len(interactions)>0:
-        dist=dist/len(interactions)
+    if count > 0:
+        dist = dist / count
     else:
-        dist=0
+        dist = 0
 
     return dist
 
@@ -269,12 +266,10 @@ def reorder_hyperedges_parallel(interactions, rcm, D):
     #return [interactions,diameter]
     return [temp, diameter]
 
-def siman(G,interactions,nVer,D,maxcount=10,maxtemp=3):
+def siman(G,nVer,maxcount=10,maxtemp=3):
     
     bestsol=[]
     sol=[]
-    tsol=[]
-    
     iteration=nVer*math.log(nVer,2)
     
     if iteration < maxcount:
@@ -286,13 +281,13 @@ def siman(G,interactions,nVer,D,maxcount=10,maxtemp=3):
     
     #print("Graph: ",G.edges())
     sol=list(reverse_cuthill_mckee_ordering(G))  #rmap
-    #print("sol: ",sol)
+#    print("sol: ",sol)
     
-    
-    bestsol=reverse_map(sol)  #rcm
+    sol.reverse()
+    bestsol=sol #rcm
     sol=bestsol.copy()
     
-    prevDist=evaluate_permutation_parallel(interactions,sol,D)
+    prevDist=evaluate_permutation(G,sol)
     #prevDist=evaluate_permutation(interactions,sol,D)
     
     count=0
@@ -311,7 +306,7 @@ def siman(G,interactions,nVer,D,maxcount=10,maxtemp=3):
         sol[j]=tt
         
         
-        curDist= evaluate_permutation_parallel(interactions,sol,D)
+        curDist= evaluate_permutation(G,sol)
         #curDist= evaluate_permutation(interactions,tsol,D)
         
         gain=prevDist-curDist
@@ -341,6 +336,33 @@ def HyperAlign(hyperedges,nVer,D,rmap_prev=[]):
     G=create_cycle_graph(hyperedges,nVer)
     
     return siman(G,hyperedges,nVer,D)
+
+
+filename = sys.argv[1]
+directed = False
+    
+# if (sys.argv[2] == 1):
+# 	directed = False
+
+
+
+if directed:
+    G = nx.read_edgelist(filename, nodetype = int, create_using = nx.DiGraph)
+else:
+    G = nx.read_edgelist(filename, nodetype = int)
+
+
+vertices = siman(G, G.number_of_nodes())
+
+mapping = {}
+
+for i in range(len(vertices)):
+    mapping[i] = vertices[i]
+    
+G = nx.relabel_nodes(G, mapping)
+
+nx.write_edgelist(G, filename, data = False)
+
 
 
 

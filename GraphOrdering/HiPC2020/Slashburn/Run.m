@@ -10,11 +10,12 @@ end
 
 A = adjacency(G);
 A = sparse(1.0 * ((A+A') > 0));
+
+spy(A)
 %%% Run SlashBurn
 k=1;
 dir=0;
 [~,~,Ak] = SlashBurn(A, k, dir);
-
 e = Edgelist(Ak);
 fid = fopen(filename, 'w');
 for row = 1:length(e)

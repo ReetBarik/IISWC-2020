@@ -29,5 +29,5 @@ for i in range(len(l)):
     
 G = nx.relabel_nodes(G, mapping)
 
-nx.write_edgelist(G, 'DegreeSort_' + filename, data = False)
+nx.write_edgelist(G, filename, data = False)
 

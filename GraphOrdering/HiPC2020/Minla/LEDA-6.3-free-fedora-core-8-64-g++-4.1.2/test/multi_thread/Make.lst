@@ -1,6 +1,0 @@
-PROGS = \
-mergesort$(e) \
-msort2$(e) \
-msort4$(e) \
-quicksort$(e)
-

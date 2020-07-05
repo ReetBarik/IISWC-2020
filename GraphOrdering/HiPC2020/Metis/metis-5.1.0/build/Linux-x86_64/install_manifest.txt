@@ -1,0 +1,8 @@
+/home/reet_barik/metis-5.1.0/include/metis.h
+/home/reet_barik/metis-5.1.0/lib/libmetis.a
+/home/reet_barik/metis-5.1.0/bin/gpmetis
+/home/reet_barik/metis-5.1.0/bin/ndmetis
+/home/reet_barik/metis-5.1.0/bin/mpmetis
+/home/reet_barik/metis-5.1.0/bin/m2gmetis
+/home/reet_barik/metis-5.1.0/bin/graphchk
+/home/reet_barik/metis-5.1.0/bin/cmpfillin
