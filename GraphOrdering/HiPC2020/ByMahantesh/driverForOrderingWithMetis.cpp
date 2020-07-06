@@ -107,9 +107,10 @@ int main(int argc, char** argv) {
     long NV = G->numVertices;
     long *C = (long *) malloc (NV * sizeof(long)); assert(C != 0);
     long *old2New   = (long *) malloc (NV * sizeof(long)); assert(old2New != 0);
+    double timePartition=0, timeRebuild=0, tmpTime=0;
     
     //Set the parameter for #partitions
-    int myVec[7]={4,8,16,32,64,128,256};
+    int myVec[1]={32};
     
     for (int i=0; i<7; i++) {
         //Initialize:
@@ -118,7 +119,11 @@ int main(int argc, char** argv) {
             old2New[j]   = -1;
         }
         //Step 1: Call the graph partitioner with a given number of partitions
+        tmpTime = omp_get_wtime();
         MetisGraphPartitioner( G, C, myVec[i]);
+        tmpTime = omp_get_wtime() - tmpTime;
+        timePartition += tmpTime;
+        
         
         //STEP 2: Now build a compact representation of partitions:
         //        Create a CSR-like datastructure for partitions
@@ -148,6 +153,7 @@ int main(int argc, char** argv) {
         assert(nC>0);
         printf("Number of unique partitions in C= %d\n", nC);
         
+        tmpTime = omp_get_wtime();
         long * commPtr = (long *) malloc ((nC+1) * sizeof(long)); assert(commPtr != 0);
         long * commIndex = (long *) malloc (NV * sizeof(long)); assert(commIndex != 0);
         long * commAdded = (long *) malloc (nC * sizeof(long)); assert(commAdded != 0);
@@ -203,6 +209,8 @@ int main(int argc, char** argv) {
             old2New[commIndex[i]] = i;
             //printf("(%ld) --> (%ld)\n", commIndex[i]+1, i+1);
         }
+        tmpTime = omp_get_wtime() - tmpTime;
+        timeRebuild += tmpTime;
         
         //Step 3: Write the reordered graph to a file:
         char outFile[256];
@@ -210,6 +218,11 @@ int main(int argc, char** argv) {
         printf("Processing with %d partitions; will be stored in file: %s\n", nC, outFile);
         writeGraphGorderEdgeListReordered(G, outFile, old2New);
     }
+    printf("=====================================================\n");
+    printf("Time for partitioning: %lf\n", timePartition);
+    printf("Time for rebuilding  : %lf\n", timeRebuild);
+    printf("Total time           : %lf\n", timePartition+timeRebuild);
+    printf("=====================================================\n");
     
     //Cleanup:
     if(G != 0) {
