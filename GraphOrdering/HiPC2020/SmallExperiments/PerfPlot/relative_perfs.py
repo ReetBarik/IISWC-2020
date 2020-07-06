@@ -65,7 +65,7 @@ def draw_lines(input_name):
     # associate each tick with thread number
     #ax.xaxis.grid(False)
     ax.tick_params(labelsize = 25)
-    ax.set_xlabel('Performance Relative to the Best Partition Size', fontsize = font_size)
+    ax.set_xlabel('Performance Relative to the Best Reordering Scheme', fontsize = font_size)
     ax.set_ylabel('Fraction of datasets', fontsize = font_size)
     # associate each tick with thread number
     ax.set_ylim([0, 1.05])
@@ -76,7 +76,7 @@ def draw_lines(input_name):
     leg = fig.legend(ax.lines, list(df), \
                     ncol = 1, frameon=True, fancybox = True, \
                     prop={'size':35}, shadow = False, framealpha=0.1, \
-                    bbox_to_anchor = (0.82, 0.56), fontsize =  'xx-small')
+                    bbox_to_anchor = (0.82, 0.70), fontsize =  'xx-small')
     leg.get_frame().set_edgecolor('k')
     leg.get_frame().set_linewidth(1)
     plt.title(input_name + ' Arrangement', {'fontsize': 50})
@@ -88,5 +88,5 @@ def draw_lines(input_name):
     return;
 
 # change path accordingly
-draw_lines('Metis')
-# draw_lines('Logarithmic')
+draw_lines('Average Linear')
+draw_lines('Maximum Linear')

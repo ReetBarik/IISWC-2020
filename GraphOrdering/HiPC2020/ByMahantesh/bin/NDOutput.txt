@@ -1,0 +1,83 @@
+********************************************
+Input Parameters: 
+********************************************
+Input File      : arenas-email.edgelist
+File type       : 14
+Threshold       : 1e-06
+C-threshold     : 0.01
+Min-size        : 100000
+Min-phase       : 1000
+basicOpt        : 0
+SyncType        : 0
+Percentage      : 100
+# of colors     : 16
+Compute_metrics : 0
+Vertex ordering : 0
+--------------------------------------------
+Coloring   : FALSE
+Replace map : FALSE
+Strong scaling : FALSE
+VF         : FLASE
+Output     : FALSE
+Compute metrics : FALSE
+********************************************
+Gorder: Parsing edge list formatted file as a graph...
+Assumes no information is provided and that vertices are numbered contiguously ...
+parse_EdgeListFromGorder(): Number of threads: 8
+ Vertices are zero based
+|V|= 1133, |E|= 5451 
+Will remove self loops 
+Done reading from file: NE= 5451. Time= 0.001206
+Time for allocating memory for storing graph = 0.000019
+Done cumulative addition for edgeListPtrs:   0.000539 sec.
+5451   10902
+*********** (1133)
+About to build edgeList...
+Time for building edgeList = 0.000539
+Within displayGraphCharacteristics()
+*******************************************
+General Graph: Characteristics :
+*******************************************
+Number of vertices   :  1133
+Number of edges      :  5451
+Maximum out-degree is:  71
+Average out-degree is:  9.622242
+Expected value of X^2:  179.816417
+Variance is          :  87.228879
+Standard deviation   :  9.339640
+Isolated vertices    :  0 (0.00%)
+Degree-one vertices  :  151 (13.33%)
+Density              :  0.424636%
+*******************************************
+Within MetisNDReorder(): 
+|V|= 1133, |E|= 5451 
+ Runtime parameters:
+   Objective type: METIS_OBJTYPE_NODE
+   Coarsening type: METIS_CTYPE_SHEM
+   Initial partitioning type: METIS_IPTYPE_NODE
+   Refinement type: METIS_RTYPE_SEP1SIDED
+   Perform a 2-hop matching: No
+   Number of balancing constraints: 1
+   Number of refinement iterations: 10
+   Random number seed: 786
+   Number of separators: 1
+   Compress graph prior to ordering: Yes
+   Detect & order connected components separately: No
+   Prunning factor for high degree vertices: 1.000000
+   Allowed maximum load imbalance: 1.200 
+
+  Pruned 429 of 1133 vertices.
+
+ gk_mcore statistics
+           coresize:        22880         nmops:         2048  cmop:      0
+        num_callocs:          535   num_hallocs:            0
+       size_callocs:       469432  size_hallocs:            0
+        cur_callocs:            0   cur_hallocs:            0
+        max_callocs:        22536   max_hallocs:            0
+ nbrpool statistics
+       nbrpoolssize:            0   nbrpoolcpos:            0
+    nbrpoolreallocs:            0
+
+Nested dissection returned correctly. Will store the permutations in vectors perm and iperm.
+double free or corruption (!prev)
+Aborted (core dumped)
