@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-
+#import os
+#os.chdir('C:/Local/Coursework/Research-HPCBIO-Lab/GraphOrdering/HiPC2020/SmallExperiments/PerfPlot/')
 # https://github.com/matplotlib/matplotlib/issues/5862#issuecomment-197330145
 def fix_eps(fpath):
     """Fix carriage returns in EPS files caused by Arial font."""
@@ -27,7 +28,8 @@ def draw_lines(input_name):
     sns.set_style("whitegrid", {'grid.color': '.5', 'grid.linestyle': u'-'})
     # palette = sns.cubehelix_palette(n_colors=3, start=0, rot=0.17, gamma=3.1, \
     #                             hue=0.9, light=0.9, dark=0.5, reverse = False, as_cmap=False)
-    palette = sns.hls_palette(8, l=.3, s=.8)
+    colors = ["#3498db", "#e74c3c", "#2ecc71", "#000000", "#3498db", "#e74c3c", "#2ecc71", "#3498db", "#e74c3c", "#2ecc71", "#3498db"]
+    palette = sns.color_palette(colors)
     sns.set_palette(palette)
 
     fig = plt.figure(figsize = (30, 15), dpi = 150)
@@ -58,9 +60,12 @@ def draw_lines(input_name):
     for i in range(0, ns):
         xs = numpy.repeat(r[:,i], 2).tolist()[0][1:]
         ys = [float(i) /np for i in numpy.repeat(pos, 2)[:-1]]
-        lines.append(ax.plot(xs, ys, linestyle = next(linecycler), \
+        if (sum(xs) > 0):
+            lines.append(ax.plot(xs, ys, linestyle = next(linecycler), \
                      marker = next(markercycler), \
                      markersize=11, linewidth=4))
+        else:
+            print('Boo')
 
     # associate each tick with thread number
     #ax.xaxis.grid(False)
@@ -71,9 +76,10 @@ def draw_lines(input_name):
     ax.set_ylim([0, 1.05])
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_yticklabels(['0%', '25%', '50%', '75%', '100%'])
-
+    
+    schemes = ['Natural', 'Metis', 'DegSort', 'RCM-strict', 'Gorder', 'Grappolo', 'Random', 'Grappolo-RCM', 'Rabbit', 'Slashburn', 'ND']
     # set legend, exclude threadnumber
-    leg = fig.legend(ax.lines, list(df), \
+    leg = fig.legend(ax.lines, schemes, \
                     ncol = 1, frameon=True, fancybox = True, \
                     prop={'size':35}, shadow = False, framealpha=0.1, \
                     bbox_to_anchor = (0.82, 0.70), fontsize =  'xx-small')
@@ -89,4 +95,4 @@ def draw_lines(input_name):
 
 # change path accordingly
 draw_lines('Average Linear')
-draw_lines('Maximum Linear')
+#draw_lines('Maximum Linear')
