@@ -47,6 +47,8 @@
 using namespace std;
 
 void computeMinLAScores(graph *G);
+void computeMinLAScoresNew(graph *G);
+
 void buildOld2NewMap(long N, long *C, long *commIndex); //Build the reordering map
 //Build coarsened graph without self loops
 void buildCoarsenedGraph(graph *Gin, graph *Gout, long *C, long numUniqueClusters, int nThreads);

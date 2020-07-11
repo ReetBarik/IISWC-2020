@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     
     //Set the parameter for #partitions
     //int myVec[7]={4,8,16,32,64,128,256};
-    int myVec[2]={32,64};
+    int myVec[1]={32};
     
     for (int i=0; i<2; i++) {
         //Initialize:
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
         
         //Step 3: Write the reordered graph to a file:
         char outFile[256];
-        sprintf(outFile,"%s_%d.edges", opts.inFile, myVec[i]);
+        sprintf(outFile,"%s_METIS_%d.edges", opts.inFile, myVec[i]);
         printf("Processing with %d partitions; will be stored in file: %s\n", nC, outFile);
         writeGraphGorderEdgeListReordered(G, outFile, old2New);
     }

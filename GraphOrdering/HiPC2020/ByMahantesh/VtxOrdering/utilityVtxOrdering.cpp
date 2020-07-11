@@ -90,6 +90,78 @@ void computeMinLAScores(graph *G) {
     
 } //End of computeMinLAScores()
 
+//Print out the linear arrangement (gap) statistics:
+void computeMinLAScoresNew(graph *G) {
+    printf("Within computeMinLAScores()\n");
+    long    NV        = G->numVertices;
+    long    NE        = G->numEdges;
+    long    *vtxPtr   = G->edgeListPtrs;
+    edge    *vtxInd   = G->edgeList;
+    long    maxGap = 0;
+    double  sum = 0, sum_sq = 0;
+    
+    long *vGap = (long *) malloc (NV * sizeof(long)); assert(vGap != 0);
+    for (long v = 0; v < NV; v++) {
+        vGap[v] = 0;
+    }
+    long graphBandwidth = 0;
+    for (long v = 0; v < NV; v++) {
+        long adj1 = vtxPtr[v];
+        long adj2 = vtxPtr[v+1];
+        for (long j = adj1; j < adj2; j++) {
+            long w = vtxInd[j].tail;
+            if(w > v) { //Process each edge only once: upper triangle of adj matrix
+                long gap = abs(w - v);
+                if (gap > graphBandwidth)
+                    graphBandwidth = gap;
+                if ( gap >  vGap[v] )
+                    vGap[v] = gap;
+            } //End of if()
+        } //End of for (w)
+    } //End of for(v)
+    //Compute the averages:
+    double sumVtxBandwidth = 0;
+    for (long v = 0; v < NV; v++) {
+       sumVtxBandwidth += (double)vGap[v]; //Vtx bandwidth
+    }
+    
+    //STEP 2: Edge Statistics:
+    for (long v = 0; v < NV; v++) {
+        long adj1 = vtxPtr[v];
+        long adj2 = vtxPtr[v+1];
+        for (long j = adj1; j < adj2; j++) {
+            long w = vtxInd[j].tail;
+            if(w > v) { //Process each edge only once: upper triangle of adj matrix
+                long gap = abs(w - v);
+                //printf("Gap: %ld\n", gap);
+                sum    += (double) (gap);
+                if (gap > maxGap)
+                    maxGap = gap;
+            } //End of if()
+        } //End of for (w)
+    } //End of for(v)
+    double average  = (double) sum / NE;
+    
+    printf("*******************************************\n");
+    printf("Linear Arrangement (gap) Statistics :\n");
+    printf("*******************************************\n");
+    printf("Number of vertices   :  %ld\n", NV);
+    printf("Number of edges      :  %ld\n", NE);
+    printf("*******************************************\n");
+    printf("Vertex-based Statistics\n");
+    printf("*******************************************\n");
+    printf("Graph bandwidth          :  %ld\n", graphBandwidth);
+    printf("Average Graph bandwidth  :  %g\n", (double)(sumVtxBandwidth / NV));
+    printf("Total Graph bandwidth    :  %g\n",  sumVtxBandwidth);
+    printf("*******************************************\n");
+    printf("Edge-based Statistics\n");
+    printf("*******************************************\n");
+    printf("Maximum edge-gap         :  %ld\n", maxGap);
+    printf("Average gap              :  %g\n",  average);
+    printf("Total gap                :  %g \n", sum);
+    printf("*******************************************\n");
+} //End of computeMinLAScoresNew()
+
 //Build a reordering scheme for vertices based on clustering
 //Group all communities together and number the vertices contiguously
 //N = Number of vertices

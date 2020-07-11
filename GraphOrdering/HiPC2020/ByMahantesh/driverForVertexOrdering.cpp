@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
     //Print statistics only:
     if(opts.vtxOrderingAlgorithm == 0) {
         computeMinLAScores(G);
+        computeMinLAScoresNew(G);
     }
     
     //RCM: Print out the file
