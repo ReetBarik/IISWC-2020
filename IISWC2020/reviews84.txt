@@ -1,0 +1,202 @@
+IISWC 2020 Paper #84 Reviews and Comments
+===========================================================================
+Paper #84 Vertex Reordering for Real-world Graphs and Applications: An
+Empirical Evaluation
+
+
+Review #84A
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Novelty
+-------
+2. Incremental improvement
+
+Strengths and contributions
+---------------------------
+This paper studies the impact of different vertex reordering schemes on graph workloads. In general, vertex reordering helps because it improves various 'gap' metrics, where a gap is the measure of the distance between vertex ids that are connected by an edge in the graph. They study these graph reordering techniques on community detection and influence maximization workloads. The reordering has more of an impact on community detection than on influence maximization.
+
+Strengths
+1. Relevant problem area (graph algorithms)
+2. Thorough description of reordering techniques
+3. Thorough evaluation of performance of these techniques
+4. Information on the microarchitectural factors that influence performance (memory bandwidth, cache space, thread parallelism).
+
+Weaknesses and areas for improvement
+------------------------------------
+1. It is good that they show end-to-end time improvements with reorderings, but it would have been useful to see the locality benefits in a table. For example, what was the change in L1/L2/L3 cache hit rates as various reorderings are performed?
+
+2. This paper is primarily a characterization paper, and it is cited as an area of future work to discuss possible changes to the applications to improve locality. However, it seems important to understand if the applications themselves could have some tuning to improve locality, before trying to apply these reorderings.
+
+3. The paper has a lot of good data, but it is hard to draw a conclusion from it. I see that reorderings matter, but it might be helpful to dig digger and say "xyz reordering works best for this kind of application, while another reordering works best for this kind." They do that to some extent with their in-depth stuff of community detect and influencer maximization, but with all of the data they have collected, maybe they could have given qualitative insights about some other types of applications.
+
+Comments to authors
+-------------------
+1. Page 4: You say that different ordering schemes have different costs, and they were implemented by different developers in different languages, so you only compare the C/C++ implementations. How much better/worse were the overheads of the other approaches?
+
+2. When running Grappolo with one thread, you said that the differences in reorderings was less than with multiple threads. Can you speculate as to why? Is it because multiple threads induce cache contention? Is there any communication overhead between threads?
+
+3. You mention on page 8 that graph traversal costs may not be a significant fraction of an algorithm's execution time. Is there some way you can measure this? This seems like an important consideration.
+
+4. Rather than just show end-to-end time, it would be helpful if you showed cache and memory miss rates before and after reordering, to show the impact of the reordering on locality.
+
+5. With Ripples, if you run many BFSes in parallel, do you get any data reuse in the last-level caches?
+
+6. Can you give more details about the 'modularity' quality metric?
+
+
+Grammar nits:
+1. page 9: "Ripples supports two diffusion processes the Independent..." ==> "Ripples supports two diffusion processes, the Independent..."
+
+
+
+Review #84B
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Novelty
+-------
+2. Incremental improvement
+
+Strengths and contributions
+---------------------------
+The paper presents the impact of different vertex reordering methods on graph applications in terms of high divergence in their runtimes, cache/memory usage, and records the observations from their experiments.
+
+Weaknesses and areas for improvement
+------------------------------------
+Architecture-dependent aspects of the conclusions is unclear
+
+Comments to authors
+-------------------
+While it is useful to study the various vertex reordering methods in graph applications and study their impact, it is unclear as to how the individual vertex reordering methods will perform with different architectures. A number of special purpose platforms, including GPUs have been explored extensively for graph applications. After reading the paper, it is unclear if the observed conclusions will change.
+
+Also, the implication of Fig 12 is unclear. Different architectural optimizations may apply to data missing in upper level caches versus requests that have to propagate all the way to DRAM. By simply measuring the average memory latency, it is hard to extract any meaningful information for better hardware/architecture designs.
+
+
+
+Review #84C
+===========================================================================
+
+Overall merit
+-------------
+4. Accept
+
+Novelty
+-------
+3. Non-incremental, new contribution
+
+Strengths and contributions
+---------------------------
+This paper studies the impact of a variety of vertex reordering techniques using 34 real-world graphs from different application areas. One major contribution of the paper is the coverage of two real-world parallel graph applications namely community detection and influence maximization.
+
+Weaknesses and areas for improvement
+------------------------------------
+Authors conduct comparative evaluation of different ordering schemes using gap measures to preserve memory locality. It is not clear if good or bad memory locality is due to the nature of various vertex reordering algorithms or an artifact of design/implementation? Is the code used for vertex reordering coming from same tool and authors? What are the authors doing to mitigate these differences in implementations for doing a fair comparison? Kindly address this in the paper.
+
+Comments to authors
+-------------------
+Also, please address the following:
+
+1. It will help if the authors can explicitly cover contributions of the paper in Section I Introduction.
+
+2. Authors need to state clearly if new vertex reordering techniques have been designed and implemented as part of this work.
+
+3. It is not clear how to interpret Fig 1. There are series of figures plotted on the same format. However authors provide more details later on how to interpret them. Since this is the first figure, it will help having an easy-to-understand explanation for interested readers.
+
+4. Fig 4: please label the x-axis to make it easy for readers to understand.
+
+5. Section III. F.  “However, since the different methods … C/C++ programming language.”. Does this not hinder all empirical evaluation conducted in the paper? Please explain.
+
+6. Memory latency and Memory hierarchy boundedness? Authors are currently reporting these two metrics. It will help if there is explanation on how various implementations lead to good/bad results for these metrics.
+
+7. Section 6B. “Interestingly, we also find that graph ordering can consistently improve load balance.”. What is the reason for that?
+
+
+
+Review #84D
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Novelty
+-------
+3. Non-incremental, new contribution
+
+Strengths and contributions
+---------------------------
+The paper analysis several different techniques for reordering vertices in order to maximize graph processing performance.  The paper presents detailed data analysis of the relative locality of connected vertices using a variety of “gap” metrics.  The results show that reordering otpimizations do matter, especially for parallel processing of large graphs.
+
+Weaknesses and areas for improvement
+------------------------------------
+The graphs must be improved!  Several axes are not labeled and graphs plot unintuitive data.  It is unclear how to take the continuous “gap” metric data and apply it to discrete hardware limitations (cache block size, LLC size, DRAM row buffer size, etc.)
+
+Comments to authors
+-------------------
+Very cool data, but the paper would be more interesting if it could relate the calculated gap measurements to hardware statistics.  For instance, could you predict the metrics shown in figure 10 by comparing the hardware’s cache sizes to the gap metrics?
+
+The conclusion mentioned looking at heterogeneous systems.  It would be very interesting to see how different gap measurements relate to the CPU versus GPU.  For instance, CPUs include large 10s of MB LLC that can capture significant temporal locality.  Meanwhile, GPUs have relatively small LLCs and often stream through their data sets.  GPUs primarily benefit from good spatial locality, especially when fetching data from DRAM.  Which gap metrics summarize these different characteristics?
+
+I had several issues with the graphs:
+
+Always label your graph axes!  What is the x-axis in Figure 1?  Is it vertex ordering schemes?  What constitutes a vertex ordering scheme?  It is difficult for the reader to understand appreciate this graph on the first page.  Similarly, please label the x-axis in figure 4 and consider illustrating this data in a different manner.  It is very difficult for the reader to understand what this data means.  What does “factor by which a given scheme fares relative to the best performing scheme” mean?  Does higher mean worse performance?
+
+Figure 5: It is very difficult to distinguish the different red, blue, and green lines.
+
+Figure 8 is a fun plot, but it is unclear how the pictures relate to the metrics in the table.
+
+Figure 11: Too many significant digits.  Please round these numbers up to make them more readable or consider normalizing them.
+
+Finally, illustrations would help the reader understand the various techniques.  In particular, I was not previously familiar with the fill-reducing schemes and could have used a picture to understand them.
+
+
+
+Review #84E
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Novelty
+-------
+2. Incremental improvement
+
+Strengths and contributions
+---------------------------
+Thorough analysis on the impact of graph node ordering in overall performance. 
+
+Good tutorial/overview of the different ordering mechanism.
+
+Weaknesses and areas for improvement
+------------------------------------
+Presentation/writing can be improved. 
+
+No discussion on the impact of the multi-node system used in the evaluation.
+
+Comments to authors
+-------------------
+Overall, the paper was an interesting paper and relatively well-done.  A minor point but the writing/presentation could be improved since it becomes difficult to follow some of the metrics and results.
+
+The main weakness in the evaluation (or the presentation) is the lack of discussion on the impact of NUMA system.  It appears as if the authors have used an 8-node NUMA system in the evaluation.  However, there is limited discussion on the impact of the 8-node NUMA system organization, communication between the nodes, or the impact of the inter-node bandwidth on overall performance.  The only discussion, it appears, is the interleaving across the different sockets.  This approach would likely generate more traffic, compared to a more locality-based assignment across the nodes. 
+
+There is also no discussion on how big these workloads are, that were evaluated. What was size of the working set in the evaluations?
+
+
+
+Comment @A1 by Reviewer C
+---------------------------------------------------------------------------
+Thank you for submitting your work to IISWC’20. 
+
+Congratulations! This paper was discussed at the PC meeting and was accepted to appear in the proceedings.
+
+During the PC meeting discussion, several PC members felt that the work is novel. However, the presentation of the paper can be improved. The PC members have added suggestions for improvements in their respective reviews. 
+
+The PC strongly encourages the authors to incorporate the feedback from the reviewers as they prepare the camera-ready version. We look forward to your presentation at IISWC’20!
